@@ -216,3 +216,32 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Suricata logs — contiennent du trafic réseau réel sensible
+/var/log/suricata/
+eve.json
+*.pcap
+*.cap
+fast.log
+stats.log
+
+# Fichiers de configuration sensibles
+suricata/suricata.yaml
+
+# IPs bloquées — données sensibles
+blocked_ips.txt
+
+# Flask
+instance/
+*.db
+
+# Emails/credentials
+credentials.json
+email_config.py
