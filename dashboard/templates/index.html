@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkIDS Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">🛡️</span>
+            <span class="brand-name">Network<span class="accent">IDS</span></span>
+        </div>
+        <div class="nav-status">
+            <span class="status-dot"></span>
+            <span>Monitoring Active</span>
+        </div>
+    </nav>
+
+    <!-- Compteurs -->
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="total-alerts">0</div>
+                    <div class="stat-label">Total Alerts</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🚫</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="total-blocked">0</div>
+                    <div class="stat-label">Blocked IPs</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🕐</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="last-alert">None</div>
+                    <div class="stat-label">Last Alert</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau des alertes -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2>🔴 Live Alerts</h2>
+                <span class="refresh-info">Auto-refresh every 5s</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Source IP</th>
+                        <th>Dest IP</th>
+                        <th>Protocol</th>
+                        <th>Signature</th>
+                        <th>Severity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="alerts-table">
+                    <tr id="no-alerts-row">
+                        <td colspan="7" class="no-alerts">
+                            No alerts detected yet...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- IPs bloquées -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2>🚫 Blocked IPs</h2>
+            </div>
+            <div id="blocked-ips-list" class="blocked-list">
+                <p class="no-alerts">No IPs blocked yet...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SEVERITY_COLORS = {
+            1: "#ff3333",
+            2: "#f59e0b",
+            3: "#22c55e",
+            4: "#6b7280"
+        };
+
+        const SEVERITY_LABELS = {
+            1: "Critical",
+            2: "Major",
+            3: "Minor",
+            4: "Info"
+        };
+
+        async function fetchAlerts() {
+            try {
+                const response = await fetch("/api/alerts");
+                const data = await response.json();
+
+                document.getElementById("total-alerts").textContent = data.total;
+                document.getElementById("total-blocked").textContent = data.total_blocked;
+
+                if (data.alerts.length > 0) {
+                    const last = data.alerts[data.alerts.length - 1];
+                    document.getElementById("last-alert").textContent =
+                        last.timestamp.substring(11, 19);
+                }
+
+                updateAlertsTable(data.alerts);
+                updateBlockedIPs(data.blocked_ips);
+
+            } catch (error) {
+                console.error("Erreur fetch:", error);
+            }
+        }
+
+        function updateAlertsTable(alerts) {
+            const tbody = document.getElementById("alerts-table");
+
+            if (alerts.length === 0) return;
+
+            document.getElementById("no-alerts-row")?.remove();
+            tbody.innerHTML = "";
+
+            alerts.slice().reverse().forEach(alert => {
+                const color = SEVERITY_COLORS[alert.severity] || "#6b7280";
+                const label = SEVERITY_LABELS[alert.severity] || "Unknown";
+                const time = alert.timestamp.substring(11, 19);
+
+                const row = `
+                    <tr>
+                        <td>${time}</td>
+                        <td><span class="ip-badge">${alert.src_ip}</span></td>
+                        <td><span class="ip-badge">${alert.dest_ip}</span></td>
+                        <td><span class="proto-badge">${alert.protocol}</span></td>
+                        <td>${alert.signature}</td>
+                        <td><span class="severity-badge" style="color:${color}; border-color:${color}">
+                            ${label}
+                        </span></td>
+                        <td>
+                            <button class="block-btn" onclick="blockIP('${alert.src_ip}')">
+                                Block
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateBlockedIPs(ips) {
+            const container = document.getElementById("blocked-ips-list");
+            if (ips.length === 0) {
+                container.innerHTML = '<p class="no-alerts">No IPs blocked yet...</p>';
+                return;
+            }
+            container.innerHTML = ips.map(ip =>
+                `<span class="blocked-ip-badge">🚫 ${ip}</span>`
+            ).join("");
+        }
+
+        async function blockIP(ip) {
+            try {
+                const response = await fetch(`/api/block/${ip}`, { method: "POST" });
+                const data = await response.json();
+                alert(data.message);
+                fetchAlerts();
+            } catch (error) {
+                console.error("Erreur blocage:", error);
+            }
+        }
+
+        fetchAlerts();
+        setInterval(fetchAlerts, 5000);
+    </script>
+</body>
+</html>
