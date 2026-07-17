@@ -245,3 +245,7 @@ instance/
 # Emails/credentials
 credentials.json
 email_config.py
+
+# Ignorer le contenu de logs mais garder le dossier
+logs/*
+!logs/.gitkeep

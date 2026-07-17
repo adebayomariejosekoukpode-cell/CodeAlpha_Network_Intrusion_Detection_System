@@ -162,7 +162,10 @@
                 return;
             }
             container.innerHTML = ips.map(ip =>
-                `<span class="blocked-ip-badge">🚫 ${ip}</span>`
+                `<div class="blocked-ip-item">
+                    <span class="blocked-ip-badge">🚫 ${ip}</span>
+                    <button class="unblock-btn" onclick="unblockIP('${ip}')">Unblock</button>
+                </div>`
             ).join("");
         }
 
@@ -174,6 +177,17 @@
                 fetchAlerts();
             } catch (error) {
                 console.error("Erreur blocage:", error);
+            }
+        }
+
+        async function unblockIP(ip) {
+            try {
+                const response = await fetch(`/api/unblock/${ip}`, { method: "POST" });
+                const data = await response.json();
+                alert(data.message);
+                fetchAlerts();
+            } catch (error) {
+                console.error("Erreur déblocage:", error);
             }
         }
 

@@ -8,9 +8,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from blocker import block_ip
 from alerter import send_alert
 
-EVE_LOG= "var/log/suricata/eve.json"
+EVE_LOG= "/var/log/suricata/eve.json"
 
-SEVERITY_THRESHOLD = 2
+SEVERITY_THRESHOLD = 4
+
+MY_IP= "192.168.1.84"
 
 processed_alerts = set()
 
@@ -75,7 +77,8 @@ def follow_eve_log():
 
             print(f"[PARSER] ALERTE : {alert['signature']} depuis {alert['src_ip']}")
 
-            block_ip(alert["src_ip"])
+            if alert["src_ip"] != MY_IP:
+                block_ip(alert["src_ip"])
             send_alert(alert)
 
 def get_alerts_history():
