@@ -42,7 +42,24 @@ def extract_alert(line):
         }
     except json.JSONDecodeError:
         return None
-    
+
+import signal
+import subprocess
+
+def cleanup(signum, frame):
+    print("\n[PARSER] Nettoyage des règles iptables...")
+    from blocker import blocked_ips
+    for ip in list(blocked_ips):
+        subprocess.run(
+            ["sudo", "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP"],
+            capture_output=True
+        )
+    print("[PARSER] Toutes les IPs débloquées.")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, cleanup)
+signal.signal(signal.SIGTERM, cleanup)
+
 def follow_eve_log():
     print(f"[PARSER] Surveillance de {EVE_LOG} ...")
 

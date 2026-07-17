@@ -1,0 +1,14 @@
+# ── Ping Sweep (ICMP) ──
+alert icmp any any -> $HOME_NET any (msg:"ICMP Ping Sweep Detected"; itype:8; threshold:type threshold, track by_src, count 5, seconds 10; sid:1001; rev:1;)
+
+# ── Nmap Port Scan ──
+alert tcp any any -> $HOME_NET any (msg:"Nmap Port Scan Detected"; flags:S; threshold:type threshold, track by_src, count 20, seconds 5; sid:1002; rev:1;)
+
+# ── SSH Brute Force ──
+alert tcp any any -> $HOME_NET 22 (msg:"SSH Brute Force Attempt"; flags:S; threshold:type threshold, track by_src, count 5, seconds 60; sid:1003; rev:1;)
+
+# ── HTTP Suspicious Request ──
+alert http any any -> $HOME_NET any (msg:"Suspicious HTTP Request Detected"; http.uri; content:"/etc/passwd"; sid:1004; rev:1;)
+
+# ── DNS Suspicious Query ──
+alert dns any any -> any 53 (msg:"Suspicious DNS Query Detected"; dns.query; content:".tk"; sid:1005; rev:1;)

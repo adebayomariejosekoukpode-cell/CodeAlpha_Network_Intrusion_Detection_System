@@ -26,7 +26,7 @@ NETWORK INTRUSION DETECTED
 Time      : {alert_info['timestamp']}
 Signature : {alert_info['signature']}
 Source IP : {alert_info['src_ip']}
-Dest IP   : {alert_info['dst_ip']}
+Dest IP   : {alert_info['dest_ip']}
 Protocol  : {alert_info['protocol']}
 Severity  : {alert_info['severity']}
 ==========================
